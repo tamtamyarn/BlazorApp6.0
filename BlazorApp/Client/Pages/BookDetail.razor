@@ -1,0 +1,19 @@
+﻿@using BlazorApp.Shared.Models
+
+@if (Book == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <Descriptions>
+        <DescriptionsItem Title="ID" Span="3">@Book.BookId</DescriptionsItem>
+        <DescriptionsItem Title="Title" Span="3">@Book.Title</DescriptionsItem>
+        <DescriptionsItem Title="Author" Span="3">@Book.Author</DescriptionsItem>
+    </Descriptions>
+}
+
+@code {
+    [Parameter]
+    public Book? Book { get; set; }
+}

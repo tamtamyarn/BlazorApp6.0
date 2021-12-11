@@ -1,0 +1,92 @@
+﻿@page "/booklist"
+@using BlazorApp.Shared.Models
+@inject HttpClient Http
+
+@if (books == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <Button Type="primary" OnClick="OpenCreateModal" Block>New Book</Button>
+    <Divider></Divider>
+
+    <Table TItem="Book" DataSource="@books">
+        <Column @bind-Field="@context.BookId" Title="ID">
+            <Button Type="link" OnClick="() => OpenDetailModal(context.BookId)">@context.BookId</Button>
+        </Column>
+        <Column @bind-Field="@context.Title" />
+        <Column @bind-Field="@context.Author" />
+        <ActionColumn>
+            <Button OnClick="() => OpenEditModal(context.BookId)">Edit</Button>
+        </ActionColumn>
+        <ActionColumn>
+            <Popconfirm Title="本当に削除しますか？" OkText="はい" CancelText="いいえ" OnConfirm="() => Delete(context.BookId)">
+                <Button Danger>Delete</Button>
+            </Popconfirm>
+        </ActionColumn>
+    </Table>
+
+    <Modal Title="Detail" Visible="@showDetailModal" OnCancel="@CloseModal" Footer="@null">
+        <BookDetail Book="@book"></BookDetail>
+    </Modal>
+
+    <Modal Title="Create" Visible="@showCreateModal" OnCancel="@CloseModal" Footer="@null">
+        <BookCreate Book="@book" Callback="@OnCallback"></BookCreate>
+    </Modal>
+
+    <Modal Title="Edit" Visible="@showEditModal" OnCancel="@CloseModal" Footer="@null">
+        <BookEdit Book="@book" Callback="@OnCallback"></BookEdit>
+    </Modal>
+}
+
+@code {
+    private List<Book>? books;
+    private Book? book;
+    private bool showDetailModal = false;
+    private bool showCreateModal = false;
+    private bool showEditModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        books = await Http.GetFromJsonAsync<List<Book>>("api/books");
+    }
+
+    public async Task OpenDetailModal(int id)
+    {
+        book = await Http.GetFromJsonAsync<Book>($"api/books/{id}");
+        showDetailModal = true;
+    }
+
+    public void CloseModal()
+    {
+        showDetailModal = false;
+        showCreateModal = false;
+        showEditModal = false;
+        book = null;
+    }
+
+    private void OpenCreateModal()
+    {
+        book = new(0, "", "");
+        showCreateModal = true;
+    }
+
+    private async Task OnCallback()
+    {
+        books = await Http.GetFromJsonAsync<List<Book>>("api/books");
+        this.CloseModal();
+    }
+
+    public async Task Delete(int bookId)
+    {
+        await Http.DeleteAsync($"api/books/{bookId}");
+        books = await Http.GetFromJsonAsync<List<Book>>("api/books");
+    }
+
+    private async Task OpenEditModal(int id)
+    {
+        book = await Http.GetFromJsonAsync<Book>($"api/books/{id}");
+        showEditModal = true;
+    }
+}

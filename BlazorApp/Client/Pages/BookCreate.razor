@@ -1,0 +1,45 @@
+﻿@using BlazorApp.Shared.Models
+@using System.Text.Json
+@inject HttpClient Http
+@inject NotificationService Notice
+
+@if (Book == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <Form Model="@Book" OnFinish="Add" LabelColSpan="4" WrapperColSpan="20">
+    <FormItem Label="Title">
+        <Input @bind-Value="@context.Title" />
+    </FormItem>
+    <FormItem Label="Author">
+        <Input @bind-Value="@context.Author" />
+    </FormItem>
+    <FormItem WrapperColSpan="24" Style="text-align: center">
+        <Button Type="primary" HtmlType="submit">Add</Button>
+    </FormItem>
+    </Form>
+}
+
+@code {
+    [Parameter]
+    public Book? Book { get; set; }
+
+    [Parameter]
+    public EventCallback Callback { get; set; }
+
+    private async Task Add()
+    {
+        var response = await Http.PostAsJsonAsync("api/books", Book);
+
+        var createdBookJson = await response.Content.ReadAsStringAsync();
+
+        await Callback.InvokeAsync();
+        await Notice.Open(new NotificationConfig()
+        {
+            Message = "New Book is Created!",
+            Description = createdBookJson
+        });
+    }
+}
